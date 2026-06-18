@@ -123,7 +123,7 @@
             min-width: 70px;
         }
 
-        /* Text Scaling & Gradient Slider Box */
+        /* Sliders Box Styling */
         .slider-group {
             display: flex;
             align-items: center;
@@ -245,12 +245,15 @@
             will-change: transform;
         }
 
-        /* Dynamic Customizable Gradient Overlay Layer */
+        /* Gradient Overlay Layer */
         .red-bg {
             position: absolute;
-            inset: 0;
+            width: 1080px;
+            height: 1080px;
             background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%);
-            pointer-events: none;
+            touch-action: none;
+            cursor: move;
+            z-index: 5;
         }
 
         .logo {
@@ -260,6 +263,7 @@
             object-fit: contain;
             top: 30px;
             pointer-events: none;
+            z-index: 6;
         }
 
         .logo.left {
@@ -374,7 +378,8 @@
                         <div class="guide-v" id="guideV"></div>
 
                         <img id="bg" src="player.jpg" crossorigin="anonymous">
-                        <div class="red-bg" id="gradientLayer"></div>
+
+                        <div class="red-bg" id="gradientLayer" style="top:0px; left:0px;"></div>
 
                         <img class="logo left" src="logo1.png" crossorigin="anonymous">
                         <img class="logo right" src="logo2.png" crossorigin="anonymous">
@@ -426,9 +431,21 @@
             </div>
 
             <div class="slider-group" style="background: #171c24; border-color: #2b3545;">
-                <label for="gradOpacitySlider">Darkness (Overlay):</label>
+                <label for="gradOpacitySlider">Gradient Darkness:</label>
                 <input type="range" id="gradOpacitySlider" min="0" max="100" value="50">
                 <span id="gradOpacityValue" style="min-width: 45px; text-align: right; font-weight: bold;">50%</span>
+            </div>
+
+            <div class="slider-group" style="background: #171c24; border-color: #2b3545;">
+                <label for="gradYSlider">Gradient Position Y:</label>
+                <input type="range" id="gradYSlider" min="-1080" max="1080" value="0">
+                <span id="gradYValue" style="min-width: 45px; text-align: right; font-weight: bold;">0px</span>
+            </div>
+
+            <div class="slider-group" style="background: #171c24; border-color: #2b3545;">
+                <label for="gradXSlider">Gradient Position X:</label>
+                <input type="range" id="gradXSlider" min="-1080" max="1080" value="0">
+                <span id="gradXValue" style="min-width: 45px; text-align: right; font-weight: bold;">0px</span>
             </div>
 
             <div class="slider-group"
@@ -502,11 +519,15 @@
         const textScaleSlider = document.getElementById("textScaleSlider");
         const sliderValueDisplay = document.getElementById("sliderValue");
 
-        // গ্র্যাডিয়েন্ট এলিমেন্ট রেফারেন্স
+        // UI কন্ট্রোল এলিমেন্টসমূহ
         const gradientLayer = document.getElementById("gradientLayer");
         const gradOpacitySlider = document.getElementById("gradOpacitySlider");
         const gradOpacityValue = document.getElementById("gradOpacityValue");
         const gradColorPicker = document.getElementById("gradColorPicker");
+        const gradXSlider = document.getElementById("gradXSlider");
+        const gradYSlider = document.getElementById("gradYSlider");
+        const gradXValue = document.getElementById("gradXValue");
+        const gradYValue = document.getElementById("gradYValue");
 
         let targetedTextElement = null;
         let baseZoom = 1;
@@ -517,12 +538,10 @@
         let startTouchesDist = 0;
         let touchStartPanX = 0, touchStartPanY = 0;
 
-        // --- ডায়নামিক গ্র্যাডিয়েন্ট ইঞ্জিন ফাংশন ---
+        // --- ডায়নামিক গ্র্যাডিয়েন্ট ইঞ্জিন ---
         function updateGradient() {
             const hexColor = gradColorPicker.value;
-            const opacity = gradOpacitySlider.getInputValue ? gradOpacitySlider.getInputValue() : gradOpacitySlider.value / 100;
-
-            // HEX কালারকে RGB তে কনভার্ট করা হচ্ছে সিএসএস ও html2canvas এর নিখুঁত সাপোর্টের জন্য
+            const opacity = gradOpacitySlider.value / 100;
             const r = parseInt(hexColor.slice(1, 3), 16);
             const g = parseInt(hexColor.slice(3, 5), 16);
             const b = parseInt(hexColor.slice(5, 7), 16);
@@ -531,9 +550,26 @@
             gradOpacityValue.textContent = gradOpacitySlider.value + "%";
         }
 
+        // UI স্লাইডার দিয়ে পজিশন কন্ট্রোল
+        function updateGradientPositionFromSliders() {
+            gradientLayer.style.left = gradXSlider.value + "px";
+            gradientLayer.style.top = gradYSlider.value + "px";
+            gradXValue.textContent = gradXSlider.value + "px";
+            gradYValue.textContent = gradYSlider.value + "px";
+        }
+
+        // ড্র্যাগ করার সময় UI স্লাইডার আপডেট করার ফাংশন
+        function syncSlidersFromGradientDrag(x, y) {
+            gradXSlider.value = Math.round(x);
+            gradYSlider.value = Math.round(y);
+            gradXValue.textContent = gradXSlider.value + "px";
+            gradYValue.textContent = gradYSlider.value + "px";
+        }
+
         gradOpacitySlider.addEventListener("input", updateGradient);
         gradColorPicker.addEventListener("input", updateGradient);
-        // ------------------------------------------
+        gradXSlider.addEventListener("input", updateGradientPositionFromSliders);
+        gradYSlider.addEventListener("input", updateGradientPositionFromSliders);
 
         function initFit() {
             baseZoom = viewContainer.clientWidth / 1080;
@@ -572,6 +608,7 @@
             bgImg.style.transform = `translate(calc(-50% + ${imgX}px), calc(-50% + ${imgY}px)) scale(${imgScale})`;
         }
 
+        // --- সমন্বিত ড্র্যাগ ইঞ্জিন ---
         let active = null;
         let offsetX = 0, offsetY = 0;
 
@@ -595,6 +632,14 @@
             const canvRect = document.getElementById("canvas").getBoundingClientRect();
             let x = (clientX - canvRect.left) / baseZoom - offsetX;
             let y = (clientY - canvRect.top) / baseZoom - offsetY;
+
+            // গ্র্যাডিয়েন্ট ড্র্যাগ হলে UI স্লাইডার সিঙ্ক হবে
+            if (active.id === "gradientLayer") {
+                active.style.left = x + "px";
+                active.style.top = y + "px";
+                syncSlidersFromGradientDrag(x, y);
+                return;
+            }
 
             const cx = 540, cy = 540, SNAP = 20, GRID = 10;
             guideH.style.display = "block"; guideV.style.display = "block";
@@ -621,7 +666,7 @@
             guideH.style.display = "none"; guideV.style.display = "none";
         };
 
-        document.querySelectorAll(".draggable").forEach(el => {
+        function bindDragElement(el) {
             el.addEventListener("mousedown", (e) => {
                 if (e.button !== 0 || document.activeElement === el) return;
                 handleStart(e.clientX, e.clientY, el);
@@ -632,7 +677,10 @@
                 handleStart(e.touches[0].clientX, e.touches[0].clientY, el);
                 e.stopPropagation();
             }, { passive: true });
-        });
+        }
+
+        document.querySelectorAll(".draggable").forEach(bindDragElement);
+        bindDragElement(gradientLayer);
 
         viewContainer.addEventListener("wheel", (e) => {
             e.preventDefault();
