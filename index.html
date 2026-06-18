@@ -26,7 +26,7 @@
 
         body {
             margin: 0;
-            padding: 10px;
+            padding: 8px;
             background: #0b0b0b;
             font-family: Arial, sans-serif;
             color: #fff;
@@ -39,23 +39,24 @@
             -webkit-user-select: none;
         }
 
-        /* --- Responsive Main Layout --- */
+        /* --- Mobile First Main Layout --- */
         .app-container {
             display: flex;
             flex-direction: column;
-            gap: 15px;
+            /* মোবাইলের জন্য আগে ক্যানভাস, নিচে কন্ট্রোল */
+            gap: 12px;
             width: 100%;
             max-width: 1100px;
             margin: 0 auto;
         }
 
-        /* --- Control Panel Grid Layout --- */
+        /* --- Controls Container (Mobile Optimized) --- */
         .controls {
-            display: grid;
-            grid-template-columns: 1fr;
+            display: flex;
+            flex-direction: column;
             gap: 10px;
             background: #141414;
-            padding: 15px;
+            padding: 12px;
             border-radius: 12px;
             border: 1px solid #222;
             width: 100%;
@@ -70,7 +71,7 @@
         input[type="text"],
         button,
         select {
-            padding: 12px 14px;
+            padding: 12px;
             font-size: 14px;
             background: #222;
             color: #fff;
@@ -114,37 +115,48 @@
         .control-group {
             display: flex;
             width: 100%;
-            gap: 8px;
+            gap: 6px;
             align-items: center;
         }
 
         .control-group button {
             width: auto;
-            min-width: 70px;
+            min-width: 60px;
         }
 
-        /* Sliders Box Styling */
+        /* Compact Sliders Box Style for Mobile Screen */
         .slider-group {
             display: flex;
             align-items: center;
             background: #1c1c1c;
-            padding: 10px 14px;
+            padding: 8px 12px;
             border: 1px solid #333;
             border-radius: 8px;
-            font-size: 14px;
-            gap: 12px;
+            font-size: 13px;
+            gap: 10px;
+            justify-content: space-between;
         }
 
         .slider-group label {
             font-weight: bold;
             white-space: nowrap;
+            flex: 1;
         }
 
         .slider-group input[type="range"] {
-            flex: 1;
+            flex: 2;
             accent-color: #d40000;
             cursor: pointer;
             height: 6px;
+            max-width: 50%;
+        }
+
+        .slider-value {
+            min-width: 45px;
+            text-align: right;
+            font-weight: bold;
+            font-size: 12px;
+            color: #bbb;
         }
 
         /* Color Picker Special Style */
@@ -152,7 +164,7 @@
             -webkit-appearance: none;
             border: none;
             width: 40px;
-            height: 35px;
+            height: 30px;
             border-radius: 6px;
             cursor: pointer;
             background: none;
@@ -168,7 +180,7 @@
             border-radius: 6px;
         }
 
-        /* --- Canvas Viewport --- */
+        /* --- Canvas Viewport (Responsive Square) --- */
         .canvas-wrapper {
             display: flex;
             justify-content: center;
@@ -179,14 +191,15 @@
         #viewport-container {
             width: 100%;
             max-width: 540px;
+            /* ডেস্কটপে এই সাইজ লক থাকবে */
             aspect-ratio: 1 / 1;
-            border: 3px solid #222;
+            border: 2px solid #222;
             background: #1a1a1a;
             position: relative;
             overflow: hidden;
             touch-action: none;
             border-radius: 12px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
         }
 
         #workspace {
@@ -341,7 +354,7 @@
             -webkit-user-select: text;
         }
 
-        /* --- DESKTOP VIEW --- */
+        /* --- DESKTOP VIEW (বড় স্ক্রিনের জন্য সাইড-বাই-সাইড লেআউট) --- */
         @media (min-width: 768px) {
             .app-container {
                 flex-direction: row-reverse;
@@ -349,19 +362,14 @@
             }
 
             .controls {
-                grid-template-columns: 1fr;
-                max-width: 450px;
-                padding: 20px;
-            }
-
-            #viewport-container {
-                max-width: 540px;
+                max-width: 420px;
+                padding: 18px;
             }
 
             .canvas-wrapper {
                 flex: 1;
                 position: sticky;
-                top: 15px;
+                top: 10px;
             }
         }
     </style>
@@ -427,32 +435,32 @@
             <div class="slider-group">
                 <label for="textScaleSlider">Text Size:</label>
                 <input type="range" id="textScaleSlider" min="10" max="150" value="34" disabled>
-                <span id="sliderValue" style="min-width: 45px; text-align: right; font-weight: bold;">--</span>
+                <span id="sliderValue" class="slider-value">--</span>
             </div>
 
             <div class="slider-group" style="background: #171c24; border-color: #2b3545;">
-                <label for="gradOpacitySlider">Gradient Darkness:</label>
+                <label for="gradOpacitySlider">Darkness:</label>
                 <input type="range" id="gradOpacitySlider" min="0" max="100" value="50">
-                <span id="gradOpacityValue" style="min-width: 45px; text-align: right; font-weight: bold;">50%</span>
+                <span id="gradOpacityValue" class="slider-value">50%</span>
             </div>
 
             <div class="slider-group" style="background: #171c24; border-color: #2b3545;">
-                <label for="gradYSlider">Gradient Position Y:</label>
+                <label for="gradYSlider">Position Y:</label>
                 <input type="range" id="gradYSlider" min="-1080" max="1080" value="0">
-                <span id="gradYValue" style="min-width: 45px; text-align: right; font-weight: bold;">0px</span>
+                <span id="gradYValue" class="slider-value">0px</span>
             </div>
 
             <div class="slider-group" style="background: #171c24; border-color: #2b3545;">
-                <label for="gradXSlider">Gradient Position X:</label>
+                <label for="gradXSlider">Position X:</label>
                 <input type="range" id="gradXSlider" min="-1080" max="1080" value="0">
-                <span id="gradXValue" style="min-width: 45px; text-align: right; font-weight: bold;">0px</span>
+                <span id="gradXValue" class="slider-value">0px</span>
             </div>
 
-            <div class="slider-group"
-                style="background: #171c24; border-color: #2b3545; justify-content: space-between;">
-                <label for="gradColorPicker">Gradient Base Color:</label>
+            <div class="slider-group" style="background: #171c24; border-color: #2b3545;">
+                <label for="gradColorPicker">Base Color:</label>
                 <input type="color" id="gradColorPicker" value="#000000">
             </div>
+
             <div class="control-group">
                 <select id="fontPicker" onchange="changeFont(this.value)">
                     <optgroup label="English Fonts">
@@ -477,7 +485,7 @@
                 </select>
             </div>
 
-            <button id="downloadBtn" style="font-size: 16px; padding: 14px;">Download Poster</button>
+            <button id="downloadBtn" style="font-size: 16px; padding: 14px; margin-top: 5px;">Download Poster</button>
         </div>
     </div>
 
@@ -519,7 +527,6 @@
         const textScaleSlider = document.getElementById("textScaleSlider");
         const sliderValueDisplay = document.getElementById("sliderValue");
 
-        // UI কন্ট্রোল এলিমেন্টসমূহ
         const gradientLayer = document.getElementById("gradientLayer");
         const gradOpacitySlider = document.getElementById("gradOpacitySlider");
         const gradOpacityValue = document.getElementById("gradOpacityValue");
@@ -538,7 +545,6 @@
         let startTouchesDist = 0;
         let touchStartPanX = 0, touchStartPanY = 0;
 
-        // --- ডায়নামিক গ্র্যাডিয়েন্ট ইঞ্জিন ---
         function updateGradient() {
             const hexColor = gradColorPicker.value;
             const opacity = gradOpacitySlider.value / 100;
@@ -550,7 +556,6 @@
             gradOpacityValue.textContent = gradOpacitySlider.value + "%";
         }
 
-        // UI স্লাইডার দিয়ে পজিশন কন্ট্রোল
         function updateGradientPositionFromSliders() {
             gradientLayer.style.left = gradXSlider.value + "px";
             gradientLayer.style.top = gradYSlider.value + "px";
@@ -558,7 +563,6 @@
             gradYValue.textContent = gradYSlider.value + "px";
         }
 
-        // ড্র্যাগ করার সময় UI স্লাইডার আপডেট করার ফাংশন
         function syncSlidersFromGradientDrag(x, y) {
             gradXSlider.value = Math.round(x);
             gradYSlider.value = Math.round(y);
@@ -608,7 +612,6 @@
             bgImg.style.transform = `translate(calc(-50% + ${imgX}px), calc(-50% + ${imgY}px)) scale(${imgScale})`;
         }
 
-        // --- সমন্বিত ড্র্যাগ ইঞ্জিন ---
         let active = null;
         let offsetX = 0, offsetY = 0;
 
@@ -633,7 +636,6 @@
             let x = (clientX - canvRect.left) / baseZoom - offsetX;
             let y = (clientY - canvRect.top) / baseZoom - offsetY;
 
-            // গ্র্যাডিয়েন্ট ড্র্যাগ হলে UI স্লাইডার সিঙ্ক হবে
             if (active.id === "gradientLayer") {
                 active.style.left = x + "px";
                 active.style.top = y + "px";
