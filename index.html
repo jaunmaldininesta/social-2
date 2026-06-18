@@ -4,71 +4,189 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Football Poster Generator</title>
+    <title>Universal Football Poster Generator</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Hind+Siliguri:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
 
     <style>
+        /* --- Juventus Font Configuration --- */
         @font-face {
             font-family: "Juventus";
             src: url("juventus.woff2") format("woff2"),
                 url("juventus.ttf") format("truetype");
         }
 
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         body {
             margin: 0;
-            background: #000;
+            padding: 10px;
+            background: #0b0b0b;
             font-family: Arial, sans-serif;
+            color: #fff;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 10px;
+            min-height: 100vh;
             overflow-x: hidden;
             user-select: none;
             -webkit-user-select: none;
         }
 
-        .controls {
+        /* --- Responsive Main Layout --- */
+        .app-container {
             display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            margin-bottom: 15px;
-            max-width: 100%;
-            justify-content: center;
-            z-index: 1000;
+            flex-direction: column;
+            gap: 15px;
+            width: 100%;
+            max-width: 1100px;
+            margin: 0 auto;
         }
 
-        input,
+        /* --- Control Panel Grid Layout --- */
+        .controls {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            background: #141414;
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid #222;
+            width: 100%;
+        }
+
+        .controls input[type="file"] {
+            display: none;
+        }
+
+        /* UI Interactive Fields */
+        .upload-btn,
+        input[type="text"],
         button,
         select {
-            padding: 8px 12px;
-            font-size: 13px;
+            padding: 12px 14px;
+            font-size: 14px;
             background: #222;
             color: #fff;
-            border: 1px solid #444;
-            border-radius: 4px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            cursor: pointer;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            width: 100%;
+            outline: none;
+            transition: background 0.2s ease;
         }
 
         input[type="text"] {
-            background: #111;
+            background: #0a0a0a;
+            text-align: left;
         }
 
-        button {
+        input[type="text"]:focus {
+            border-color: #d40000;
+        }
+
+        button,
+        .upload-btn {
             background: #d40000;
             border: none;
             font-weight: bold;
-            cursor: pointer;
+            white-space: nowrap;
         }
 
-        /* Mobile viewport boundary container */
+        button:active,
+        .upload-btn:active {
+            background: #a30000;
+        }
+
+        .upload-btn {
+            background: #2a2a2a;
+            display: inline-block;
+        }
+
+        .control-group {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .control-group button {
+            width: auto;
+            min-width: 70px;
+        }
+
+        /* Text Scaling & Gradient Slider Box */
+        .slider-group {
+            display: flex;
+            align-items: center;
+            background: #1c1c1c;
+            padding: 10px 14px;
+            border: 1px solid #333;
+            border-radius: 8px;
+            font-size: 14px;
+            gap: 12px;
+        }
+
+        .slider-group label {
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .slider-group input[type="range"] {
+            flex: 1;
+            accent-color: #d40000;
+            cursor: pointer;
+            height: 6px;
+        }
+
+        /* Color Picker Special Style */
+        input[type="color"] {
+            -webkit-appearance: none;
+            border: none;
+            width: 40px;
+            height: 35px;
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch-wrapper {
+            padding: 0;
+        }
+
+        input[type="color"]::-webkit-color-swatch {
+            border: 1px solid #444;
+            border-radius: 6px;
+        }
+
+        /* --- Canvas Viewport --- */
+        .canvas-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+
         #viewport-container {
             width: 100%;
-            max-width: 600px;
-            height: 70vh;
-            border: 2px solid #333;
+            max-width: 540px;
+            aspect-ratio: 1 / 1;
+            border: 3px solid #222;
             background: #1a1a1a;
             position: relative;
             overflow: hidden;
             touch-action: none;
-            border-radius: 8px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
         }
 
         #workspace {
@@ -86,8 +204,10 @@
             background: #111;
             top: 0;
             left: 0;
+            font-family: "Juventus", Arial, sans-serif;
         }
 
+        /* Alignment Guides */
         .guide-h,
         .guide-v {
             position: absolute;
@@ -109,75 +229,87 @@
             left: 50%;
         }
 
+        /* Graphics Layers */
         #bg {
             position: absolute;
-            width: 100%;
-            height: 100%;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
             object-fit: cover;
             pointer-events: none;
+            transform-origin: center center;
+            transform: translate(-50%, -50%);
+            will-change: transform;
         }
 
+        /* Dynamic Customizable Gradient Overlay Layer */
         .red-bg {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to bottom,
-                    rgba(0, 0, 0, 0.15),
-                    rgba(0, 0, 0, 0.9));
+            background: linear-gradient(to bottom, rgba(0, 0, 0, 0) 0%, rgba(0, 0, 0, 0.5) 100%);
             pointer-events: none;
         }
 
         .logo {
             position: absolute;
-            width: 80px;
-            height: 80px;
+            width: 90px;
+            height: 90px;
             object-fit: contain;
-            top: 25px;
+            top: 30px;
             pointer-events: none;
         }
 
         .logo.left {
-            left: 25px;
+            left: 30px;
         }
 
         .logo.right {
-            right: 25px;
+            right: 30px;
         }
 
+        /* Typography Drag Styles */
         .draggable {
             position: absolute;
             cursor: move;
-            user-select: text;
-            -webkit-user-select: text;
             touch-action: none;
-            padding: 10px;
-            border: 1px dashed transparent;
+            padding: 12px;
+            border: 2px dashed transparent;
+            z-index: 10;
+            user-select: none;
+            -webkit-user-select: none;
+            box-sizing: border-box;
         }
 
-        /* Visual cue for mobile interaction states */
-        .draggable:match-border,
-        .draggable:focus {
-            border-color: rgba(255, 255, 255, 0.4);
-            background: rgba(255, 255, 255, 0.05);
+        .draggable:focus-within {
+            border-color: rgba(212, 0, 0, 0.6);
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 6px;
         }
 
         .title,
         .sub,
         .btn {
             color: #fff;
-            font-family: "Juventus", Arial, sans-serif;
             text-align: center;
-            width: max-content;
         }
 
         .title {
-            font-size: 34px;
+            width: 860px;
+            font-size: 36px;
             font-weight: 900;
             text-transform: uppercase;
             letter-spacing: 1px;
+            line-height: 1.3;
+            word-wrap: break-word;
         }
 
         .sub {
-            font-size: 28px;
+            width: max-content;
+            max-width: 1020px;
+            font-size: 30px;
             font-weight: 800;
             line-height: 1.4;
         }
@@ -185,133 +317,377 @@
         .highlight {
             display: inline-block;
             background: #d40000;
-            padding: 6px 14px;
+            padding: 4px 14px;
             font-weight: 900;
-            text-transform: uppercase;
         }
 
         .btn {
+            width: max-content;
             display: inline-block;
             background: #d40000;
-            padding: 10px 20px;
-            font-size: 18px;
+            padding: 12px 24px;
+            font-size: 20px;
             font-weight: 700;
             text-transform: uppercase;
         }
 
         [contenteditable="true"] {
             outline: none;
+            user-select: text;
+            -webkit-user-select: text;
+        }
+
+        /* --- DESKTOP VIEW --- */
+        @media (min-width: 768px) {
+            .app-container {
+                flex-direction: row-reverse;
+                align-items: flex-start;
+            }
+
+            .controls {
+                grid-template-columns: 1fr;
+                max-width: 450px;
+                padding: 20px;
+            }
+
+            #viewport-container {
+                max-width: 540px;
+            }
+
+            .canvas-wrapper {
+                flex: 1;
+                position: sticky;
+                top: 15px;
+            }
         }
     </style>
 </head>
 
 <body>
 
-    <div class="controls">
-        <input type="file" id="bgUpload">
-        <input type="text" id="bgURL" placeholder="Player Image URL">
-        <button onclick="setImage('bgURL','#bg')">Set Player</button>
+    <div class="app-container">
+        <div class="canvas-wrapper">
+            <div id="viewport-container">
+                <div id="workspace">
+                    <div id="canvas">
+                        <div class="guide-h" id="guideH"></div>
+                        <div class="guide-v" id="guideV"></div>
 
-        <input type="file" id="logo1Upload">
-        <input type="text" id="logo1URL" placeholder="Logo 1 URL">
-        <button onclick="setImage('logo1URL','.logo.left')">Set Logo 1</button>
+                        <img id="bg" src="player.jpg" crossorigin="anonymous">
+                        <div class="red-bg" id="gradientLayer"></div>
 
-        <input type="file" id="logo2Upload">
-        <input type="text" id="logo2URL" placeholder="Logo 2 URL">
-        <button onclick="setImage('logo2URL','.logo.right')">Set Logo 2</button>
+                        <img class="logo left" src="logo1.png" crossorigin="anonymous">
+                        <img class="logo right" src="logo2.png" crossorigin="anonymous">
 
-        <select id="fontPicker" onchange="changeFont(this.value)">
-            <option value="Juventus">Juventus</option>
-            <option value="Roboto">Roboto</option>
-            <option value="Montserrat">Montserrat</option>
-            <option value="Bebas Neue">Bebas Neue</option>
-            <option value="Poppins">Poppins</option>
-        </select>
+                        <div id="title" class="draggable title" contenteditable="true" style="top:140px; left:110px;">
+                            THE STRUGGLE FOR MINUTES:
+                        </div>
 
-        <select id="sizeSelect">
-            <option value="1080">1080 × 1080</option>
-            <option value="2000">2000 × 2000</option>
-        </select>
+                        <div id="sub" class="draggable sub" contenteditable="true"
+                            style="top:520px; left:540px; transform: translate(-50%, 0);">
+                            <span class="highlight">MAX IBRAHIMOVIĆ</span> AT <span class="highlight">AJAX</span>
+                        </div>
 
-        <button id="downloadBtn">Download Poster</button>
-    </div>
-
-    <div id="viewport-container">
-        <div id="workspace">
-            <div id="canvas">
-
-                <div class="guide-h" id="guideH"></div>
-                <div class="guide-v" id="guideV"></div>
-
-                <img id="bg" src="player.jpg">
-                <div class="red-bg"></div>
-
-                <img class="logo left" src="logo1.png">
-                <img class="logo right" src="logo2.png">
-
-                <div id="title" class="draggable title" contenteditable="false"
-                    style="top:140px; left:540px; transform: translate(-50%, 0);">
-                    THE STRUGGLE FOR MINUTES:
+                        <div id="btn" class="draggable btn" contenteditable="true"
+                            style="top:780px; left:540px; transform: translate(-50%, 0);">
+                            READ MORE
+                        </div>
+                    </div>
                 </div>
-
-                <div id="sub" class="draggable sub" contenteditable="false"
-                    style="top:520px; left:540px; transform: translate(-50%, 0);">
-                    <span class="highlight">MAX IBRAHIMOVIĆ</span> AT
-                    <span class="highlight">AJAX</span>
-                </div>
-
-                <div id="btn" class="draggable btn" contenteditable="false"
-                    style="top:780px; left:540px; transform: translate(-50%, 0);">
-                    READ MORE
-                </div>
-
             </div>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="bgUpload" class="upload-btn">Upload Player</label>
+                <input type="file" id="bgUpload" accept="image/*">
+                <input type="text" id="bgURL" placeholder="Player Image URL">
+                <button onclick="setImage('bgURL','#bg')">Set</button>
+            </div>
+
+            <div class="control-group">
+                <label for="logo1Upload" class="upload-btn">Logo 1</label>
+                <input type="file" id="logo1Upload" accept="image/*">
+                <input type="text" id="logo1URL" placeholder="Logo 1 URL">
+                <button onclick="setImage('logo1URL','.logo.left')">Set</button>
+            </div>
+
+            <div class="control-group">
+                <label for="logo2Upload" class="upload-btn">Logo 2</label>
+                <input type="file" id="logo2Upload" accept="image/*">
+                <input type="text" id="logo2URL" placeholder="Logo 2 URL">
+                <button onclick="setImage('logo2URL','.logo.right')">Set</button>
+            </div>
+
+            <div class="slider-group">
+                <label for="textScaleSlider">Text Size:</label>
+                <input type="range" id="textScaleSlider" min="10" max="150" value="34" disabled>
+                <span id="sliderValue" style="min-width: 45px; text-align: right; font-weight: bold;">--</span>
+            </div>
+
+            <div class="slider-group" style="background: #171c24; border-color: #2b3545;">
+                <label for="gradOpacitySlider">Darkness (Overlay):</label>
+                <input type="range" id="gradOpacitySlider" min="0" max="100" value="50">
+                <span id="gradOpacityValue" style="min-width: 45px; text-align: right; font-weight: bold;">50%</span>
+            </div>
+
+            <div class="slider-group"
+                style="background: #171c24; border-color: #2b3545; justify-content: space-between;">
+                <label for="gradColorPicker">Gradient Base Color:</label>
+                <input type="color" id="gradColorPicker" value="#000000">
+            </div>
+            <div class="control-group">
+                <select id="fontPicker" onchange="changeFont(this.value)">
+                    <optgroup label="English Fonts">
+                        <option value="Juventus">Juventus</option>
+                        <option value="Roboto">Roboto</option>
+                        <option value="Montserrat">Montserrat</option>
+                        <option value="Bebas Neue">Bebas Neue</option>
+                        <option value="Poppins">Poppins</option>
+                    </optgroup>
+                    <optgroup label="Bangla Fonts">
+                        <option value="Hind Siliguri, 300">Hind Siliguri Light</option>
+                        <option value="Hind Siliguri, 400">Hind Siliguri Regular</option>
+                        <option value="Hind Siliguri, 500">Hind Siliguri Medium</option>
+                        <option value="Hind Siliguri, 600">Hind Siliguri SemiBold</option>
+                        <option value="Hind Siliguri, 700">Hind Siliguri Bold</option>
+                    </optgroup>
+                </select>
+
+                <select id="sizeSelect">
+                    <option value="1080">1080px (Standard)</option>
+                    <option value="2000">2000px (Ultra HD)</option>
+                </select>
+            </div>
+
+            <button id="downloadBtn" style="font-size: 16px; padding: 14px;">Download Poster</button>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
 
     <script>
-        const fonts = {
+        const googleFonts = {
             "Roboto": "Roboto:wght@400;700;900",
             "Montserrat": "Montserrat:wght@400;700;900",
             "Bebas Neue": "Bebas+Neue",
             "Poppins": "Poppins:wght@400;700;900"
         };
 
-        function changeFont(f) {
-            if (f === "Juventus") {
-                document.getElementById("canvas").style.fontFamily = "Juventus, Arial";
+        function changeFont(value) {
+            const canvas = document.getElementById("canvas");
+            if (value.startsWith("Hind Siliguri")) {
+                const parts = value.split(", ");
+                canvas.style.fontFamily = `'Hind Siliguri', Arial, sans-serif`;
+                canvas.style.fontWeight = parts[1];
+                return;
+            }
+            if (value === "Juventus") {
+                canvas.style.fontFamily = `"Juventus", Arial, sans-serif`;
+                canvas.style.fontWeight = "900";
                 return;
             }
             const link = document.createElement("link");
             link.rel = "stylesheet";
-            link.href = `https://fonts.googleapis.com/css2?family=${fonts[f]}&display=swap`;
+            link.href = `https://fonts.googleapis.com/css2?family=${googleFonts[value]}&display=swap`;
             document.head.appendChild(link);
-            document.getElementById("canvas").style.fontFamily = `"${f}", Arial`;
+            canvas.style.fontFamily = `"${value}", Arial, sans-serif`;
         }
 
-        document.getElementById("downloadBtn").addEventListener("click", () => {
-            const size = parseInt(document.getElementById("sizeSelect").value);
+        const viewContainer = document.getElementById("viewport-container");
+        const workspace = document.getElementById("workspace");
+        const bgImg = document.getElementById("bg");
+        const guideH = document.getElementById("guideH");
+        const guideV = document.getElementById("guideV");
+        const textScaleSlider = document.getElementById("textScaleSlider");
+        const sliderValueDisplay = document.getElementById("sliderValue");
 
-            // Reset temporary zoom settings to extract clean 1080 original composition
-            const oldWTransform = workspace.style.transform;
-            workspace.style.transform = "scale(1) translate(0px, 0px)";
+        // গ্র্যাডিয়েন্ট এলিমেন্ট রেফারেন্স
+        const gradientLayer = document.getElementById("gradientLayer");
+        const gradOpacitySlider = document.getElementById("gradOpacitySlider");
+        const gradOpacityValue = document.getElementById("gradOpacityValue");
+        const gradColorPicker = document.getElementById("gradColorPicker");
 
-            html2canvas(document.getElementById("canvas"), {
-                scale: size / 1080,
-                useCORS: true,
-                backgroundColor: null,
-                width: 1080,
-                height: 1080
-            }).then(canvas => {
-                workspace.style.transform = oldWTransform;
-                const a = document.createElement("a");
-                a.download = `football-poster-${size}.png`;
-                a.href = canvas.toDataURL("image/png");
-                a.click();
+        let targetedTextElement = null;
+        let baseZoom = 1;
+        let imgX = 0, imgY = 0, imgScale = 1;
+        let startImgX = 0, startImgY = 0, startImgScale = 1;
+        let isMovingImage = false;
+        let isPinchingImage = false;
+        let startTouchesDist = 0;
+        let touchStartPanX = 0, touchStartPanY = 0;
+
+        // --- ডায়নামিক গ্র্যাডিয়েন্ট ইঞ্জিন ফাংশন ---
+        function updateGradient() {
+            const hexColor = gradColorPicker.value;
+            const opacity = gradOpacitySlider.getInputValue ? gradOpacitySlider.getInputValue() : gradOpacitySlider.value / 100;
+
+            // HEX কালারকে RGB তে কনভার্ট করা হচ্ছে সিএসএস ও html2canvas এর নিখুঁত সাপোর্টের জন্য
+            const r = parseInt(hexColor.slice(1, 3), 16);
+            const g = parseInt(hexColor.slice(3, 5), 16);
+            const b = parseInt(hexColor.slice(5, 7), 16);
+
+            gradientLayer.style.background = `linear-gradient(to bottom, rgba(${r}, ${g}, ${b}, 0) 0%, rgba(${r}, ${g}, ${b}, ${opacity}) 100%)`;
+            gradOpacityValue.textContent = gradOpacitySlider.value + "%";
+        }
+
+        gradOpacitySlider.addEventListener("input", updateGradient);
+        gradColorPicker.addEventListener("input", updateGradient);
+        // ------------------------------------------
+
+        function initFit() {
+            baseZoom = viewContainer.clientWidth / 1080;
+            workspace.style.transform = `scale(${baseZoom})`;
+        }
+        window.addEventListener("load", initFit);
+        window.addEventListener("resize", initFit);
+
+        function resetPlayerTransform() {
+            imgX = 0; imgY = 0; imgScale = 1;
+            updatePlayerTransform();
+        }
+
+        function attachTextScalingListeners() {
+            document.querySelectorAll(".draggable").forEach(el => {
+                el.addEventListener("focus", () => {
+                    targetedTextElement = el;
+                    textScaleSlider.disabled = false;
+                    const currentSize = parseInt(el.style.fontSize) || parseInt(window.getComputedStyle(el).fontSize);
+                    textScaleSlider.value = currentSize;
+                    sliderValueDisplay.textContent = currentSize + "px";
+                });
             });
+
+            textScaleSlider.addEventListener("input", (e) => {
+                if (targetedTextElement) {
+                    const targetVal = e.target.value;
+                    targetedTextElement.style.fontSize = targetVal + "px";
+                    sliderValueDisplay.textContent = targetVal + "px";
+                }
+            });
+        }
+        attachTextScalingListeners();
+
+        function updatePlayerTransform() {
+            bgImg.style.transform = `translate(calc(-50% + ${imgX}px), calc(-50% + ${imgY}px)) scale(${imgScale})`;
+        }
+
+        let active = null;
+        let offsetX = 0, offsetY = 0;
+
+        function handleStart(clientX, clientY, targetEl) {
+            active = targetEl;
+            if (active.style.transform.includes("translate")) {
+                const rect = active.getBoundingClientRect();
+                const canvRect = document.getElementById("canvas").getBoundingClientRect();
+                active.style.left = ((rect.left - canvRect.left) / baseZoom) + "px";
+                active.style.transform = "none";
+            }
+            const elLeft = parseFloat(active.style.left) || 0;
+            const elTop = parseFloat(active.style.top) || 0;
+            const canvRect = document.getElementById("canvas").getBoundingClientRect();
+            offsetX = ((clientX - canvRect.left) / baseZoom) - elLeft;
+            offsetY = ((clientY - canvRect.top) / baseZoom) - elTop;
+        }
+
+        function handleMove(clientX, clientY) {
+            if (!active) return;
+            const canvRect = document.getElementById("canvas").getBoundingClientRect();
+            let x = (clientX - canvRect.left) / baseZoom - offsetX;
+            let y = (clientY - canvRect.top) / baseZoom - offsetY;
+
+            const cx = 540, cy = 540, SNAP = 20, GRID = 10;
+            guideH.style.display = "block"; guideV.style.display = "block";
+            guideH.style.top = cy + "px"; guideV.style.left = cx + "px";
+
+            if (Math.abs(x + active.offsetWidth / 2 - cx) < SNAP) {
+                x = cx - active.offsetWidth / 2;
+                guideV.style.background = "red";
+            } else { guideV.style.background = "rgba(255,255,255,0.25)"; }
+
+            if (Math.abs(y + active.offsetHeight / 2 - cy) < SNAP) {
+                y = cy - active.offsetHeight / 2;
+                guideH.style.background = "red";
+            } else { guideH.style.background = "rgba(255,255,255,0.25)"; }
+
+            x = Math.round(x / GRID) * GRID;
+            y = Math.round(y / GRID) * GRID;
+            active.style.left = x + "px";
+            active.style.top = y + "px";
+        }
+
+        const handleEnd = () => {
+            active = null; isMovingImage = false; isPinchingImage = false;
+            guideH.style.display = "none"; guideV.style.display = "none";
+        };
+
+        document.querySelectorAll(".draggable").forEach(el => {
+            el.addEventListener("mousedown", (e) => {
+                if (e.button !== 0 || document.activeElement === el) return;
+                handleStart(e.clientX, e.clientY, el);
+                e.stopPropagation();
+            });
+            el.addEventListener("touchstart", (e) => {
+                if (document.activeElement === el) return;
+                handleStart(e.touches[0].clientX, e.touches[0].clientY, el);
+                e.stopPropagation();
+            }, { passive: true });
         });
+
+        viewContainer.addEventListener("wheel", (e) => {
+            e.preventDefault();
+            imgScale = e.deltaY < 0 ? Math.min(6, imgScale + 0.08) : Math.max(0.1, imgScale - 0.08);
+            updatePlayerTransform();
+        }, { passive: false });
+
+        viewContainer.addEventListener("mousedown", (e) => {
+            if (active || e.button !== 0) return;
+            isMovingImage = true;
+            touchStartPanX = e.clientX; touchStartPanY = e.clientY;
+            startImgX = imgX; startImgY = imgY;
+        });
+
+        viewContainer.addEventListener("touchstart", (e) => {
+            if (active) return;
+            if (e.touches.length === 1) {
+                isMovingImage = true;
+                touchStartPanX = e.touches[0].clientX; touchStartPanY = e.touches[0].clientY;
+                startImgX = imgX; startImgY = imgY;
+            } else if (e.touches.length === 2) {
+                isMovingImage = false; isPinchingImage = true;
+                startTouchesDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                startImgScale = imgScale;
+            }
+        }, { passive: true });
+
+        window.addEventListener("mousemove", (e) => {
+            if (active) handleMove(e.clientX, e.clientY);
+            else if (isMovingImage) {
+                imgX = startImgX + (e.clientX - touchStartPanX) / baseZoom;
+                imgY = startImgY + (e.clientY - touchStartPanY) / baseZoom;
+                updatePlayerTransform();
+            }
+        });
+
+        window.addEventListener("touchmove", (e) => {
+            if (active && e.touches.length === 1) {
+                handleMove(e.touches[0].clientX, e.touches[0].clientY);
+                if (e.cancelable) e.preventDefault();
+            } else if (isMovingImage && e.touches.length === 1) {
+                imgX = startImgX + (e.touches[0].clientX - touchStartPanX) / baseZoom;
+                imgY = startImgY + (e.touches[0].clientY - touchStartPanY) / baseZoom;
+                updatePlayerTransform();
+                if (e.cancelable) e.preventDefault();
+            } else if (isPinchingImage && e.touches.length === 2) {
+                const currentDist = Math.hypot(e.touches[0].clientX - e.touches[1].clientX, e.touches[0].clientY - e.touches[1].clientY);
+                imgScale = Math.max(0.1, Math.min(6, startImgScale * (currentDist / startTouchesDist)));
+                updatePlayerTransform();
+                if (e.cancelable) e.preventDefault();
+            }
+        }, { passive: false });
+
+        window.addEventListener("mouseup", handleEnd);
+        window.addEventListener("touchend", handleEnd);
 
         function bindUpload(id, target) {
             document.getElementById(id).addEventListener("change", e => {
@@ -319,208 +695,57 @@
                 if (!file) return;
                 const reader = new FileReader();
                 reader.onload = ev => {
-                    document.querySelector(target).src = ev.target.result;
+                    const img = document.querySelector(target);
+                    img.removeAttribute('crossOrigin');
+                    img.src = ev.target.result;
+                    if (target === '#bg') resetPlayerTransform();
                 };
                 reader.readAsDataURL(file);
             });
         }
-
         bindUpload("bgUpload", "#bg");
         bindUpload("logo1Upload", ".logo.left");
         bindUpload("logo2Upload", ".logo.right");
 
         function setImage(id, sel) {
-            const url = document.getElementById(id).value.trim();
-            if (url) document.querySelector(sel).src = url;
+            const urlInput = document.getElementById(id).value.trim();
+            if (!urlInput) return;
+            const img = document.querySelector(sel);
+            const proxyUrl = "https://corsproxy.io/?" + encodeURIComponent(urlInput);
+            img.crossOrigin = "anonymous";
+            img.src = proxyUrl;
+            if (sel === '#bg') { img.onload = () => resetPlayerTransform(); }
+            img.onerror = () => { img.src = urlInput + (urlInput.includes('?') ? '&' : '?') + '_ts=' + Date.now(); };
         }
 
-        // --- CORE MOBILE WORKSPACE MOTOR (PAN & PINCH-ZOOM) ---
-        const viewContainer = document.getElementById("viewport-container");
-        const workspace = document.getElementById("workspace");
-        const guideH = document.getElementById("guideH");
-        const guideV = document.getElementById("guideV");
+        document.getElementById("downloadBtn").addEventListener("click", () => {
+            const size = parseInt(document.getElementById("sizeSelect").value);
+            const oldWTransform = workspace.style.transform;
+            workspace.style.transform = "scale(1) translate(0px, 0px)";
 
-        let panX = 0, panY = 0, zoom = 1;
-        let isPanning = false;
-        let startTouchesDist = 0;
-        let startZoom = 1;
-        let touchStartPanX = 0, touchStartPanY = 0;
-
-        // Auto-fit unscaled canvas safely into your device view metrics initially
-        function initFit() {
-            zoom = viewContainer.clientWidth / 1080;
-            panX = 0;
-            panY = 0;
-            updateWorkspaceTransform();
-        }
-        window.addEventListener("load", initFit);
-        window.addEventListener("resize", initFit);
-
-        function updateWorkspaceTransform() {
-            workspace.style.transform = `translate(${panX}px, ${panY}px) scale(${zoom})`;
-        }
-
-        // --- INTEGRATED INTERACTION HANDLERS ---
-        let active = null;
-        let offsetX = 0, offsetY = 0;
-        let lastTap = 0;
-
-        // Clean element translation handling accounting for scale variances
-        function handleStart(clientX, clientY, targetEl, isTouch) {
-            if (targetEl.contentEditable === "true") return;
-
-            active = targetEl;
-            // Strip structural 'translate(-50%)' fallback on first interaction safely
-            if (active.style.transform.includes("translate")) {
-                const rect = active.getBoundingClientRect();
-                const canvRect = document.getElementById("canvas").getBoundingClientRect();
-                active.style.left = ((rect.left - canvRect.left) / zoom) + "px";
-                active.style.transform = "none";
-            }
-
-            const elLeft = parseFloat(active.style.left) || 0;
-            const elTop = parseFloat(active.style.top) || 0;
-
-            const canvRect = document.getElementById("canvas").getBoundingClientRect();
-            const canvasX = (clientX - canvRect.left) / zoom;
-            const canvasY = (clientY - canvRect.top) / zoom;
-
-            offsetX = canvasX - elLeft;
-            offsetY = canvasY - elTop;
-        }
-
-        function handleMove(clientX, clientY) {
-            if (!active) return;
-
-            const canvRect = document.getElementById("canvas").getBoundingClientRect();
-            let x = (clientX - canvRect.left) / zoom - offsetX;
-            let y = (clientY - canvRect.top) / zoom - offsetY;
-
-            const cx = 540;
-            const cy = 540;
-            const SNAP_CENTER = 20;
-            const GRID = 20;
-
-            guideH.style.display = "block";
-            guideV.style.display = "block";
-            guideH.style.top = cy + "px";
-            guideV.style.left = cx + "px";
-
-            if (Math.abs(x + active.offsetWidth / 2 - cx) < SNAP_CENTER) {
-                x = cx - active.offsetWidth / 2;
-                guideV.style.background = "red";
-            } else {
-                guideV.style.background = "rgba(255,255,255,0.25)";
-            }
-
-            if (Math.abs(y + active.offsetHeight / 2 - cy) < SNAP_CENTER) {
-                y = cy - active.offsetHeight / 2;
-                guideH.style.background = "red";
-            } else {
-                guideH.style.background = "rgba(255,255,255,0.25)";
-            }
-
-            x = Math.round(x / GRID) * GRID;
-            y = Math.round(y / GRID) * GRID;
-
-            active.style.left = x + "px";
-            active.style.top = y + "px";
-        }
-
-        // --- GLOBAL EVENT ROUTER ---
-        document.querySelectorAll(".draggable").forEach(el => {
-            // Desktop Mouse Listeners
-            el.addEventListener("mousedown", (e) => {
-                if (e.button !== 0) return;
-                handleStart(e.clientX, e.clientY, el, false);
-            });
-
-            // Mobile Smart Touch Router (Double Tap to Focus text / Single Tap to Move)
-            el.addEventListener("touchstart", (e) => {
-                const now = Date.now();
-                if (now - lastTap < 300) {
-                    // Activate Text Editing
-                    el.contentEditable = "true";
-                    el.focus();
-                    active = null;
-                } else {
-                    if (el.contentEditable !== "true") {
-                        handleStart(e.touches[0].clientX, e.touches[0].clientY, el, true);
-                    }
-                }
-                lastTap = now;
-            }, { passive: true });
-
-            el.addEventListener("blur", () => {
-                el.contentEditable = "false";
+            html2canvas(document.getElementById("canvas"), {
+                scale: size / 1080,
+                useCORS: true,
+                allowTaint: false,
+                backgroundColor: null,
+                width: 1080,
+                height: 1080,
+                scrollX: 0, scrollY: 0,
+                windowWidth: 1080, windowHeight: 1080,
+                imageTimeout: 6000
+            }).then(canvas => {
+                workspace.style.transform = oldWTransform;
+                const a = document.createElement("a");
+                a.download = `football-poster-${size}.png`;
+                a.href = canvas.toDataURL("image/png");
+                a.click();
+            }).catch(err => {
+                workspace.style.transform = oldWTransform;
+                alert("Download failed. If using external URLs, please try uploading a local file!");
+                console.error(err);
             });
         });
-
-        // Viewport Interaction Logic (Distinguishing dragging text from zooming layout)
-        viewContainer.addEventListener("touchstart", (e) => {
-            if (e.touches.length === 1 && !active) {
-                isPanning = true;
-                touchStartPanX = e.touches[0].clientX - panX;
-                touchStartPanY = e.touches[0].clientY - panY;
-            } else if (e.touches.length === 2) {
-                isPanning = false;
-                active = null;
-                startTouchesDist = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                startZoom = zoom;
-            }
-        }, { passive: true });
-
-        window.addEventListener("touchmove", (e) => {
-            if (active && e.touches.length === 1) {
-                handleMove(e.touches[0].clientX, e.touches[0].clientY);
-                if (e.cancelable) e.preventDefault();
-            } else if (isPanning && e.touches.length === 1) {
-                panX = e.touches[0].clientX - touchStartPanX;
-                panY = e.touches[0].clientY - touchStartPanY;
-                updateWorkspaceTransform();
-            } else if (e.touches.length === 2) {
-                const currentDist = Math.hypot(
-                    e.touches[0].clientX - e.touches[1].clientX,
-                    e.touches[0].clientY - e.touches[1].clientY
-                );
-                zoom = Math.max(0.1, Math.min(4, startZoom * (currentDist / startTouchesDist)));
-                updateWorkspaceTransform();
-            }
-        }, { passive: false });
-
-        // Desktop fallback listeners for workspace panning
-        viewContainer.addEventListener("mousedown", (e) => {
-            if (!active && e.button === 0) {
-                isPanning = true;
-                touchStartPanX = e.clientX - panX;
-                touchStartPanY = e.clientY - panY;
-            }
-        });
-
-        window.addEventListener("mousemove", (e) => {
-            if (active) {
-                handleMove(e.clientX, e.clientY);
-            } else if (isPanning) {
-                panX = e.clientX - touchStartPanX;
-                panY = e.clientY - touchStartPanY;
-                updateWorkspaceTransform();
-            }
-        });
-
-        const handleEnd = () => {
-            active = null;
-            isPanning = false;
-            guideH.style.display = "none";
-            guideV.style.display = "none";
-        };
-
-        window.addEventListener("mouseup", handleEnd);
-        window.addEventListener("touchend", handleEnd);
     </script>
-
 </body>
 
 </html>
